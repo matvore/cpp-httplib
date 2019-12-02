@@ -1646,6 +1646,18 @@ TEST_F(ServerTest, KeepAlive) {
   }
 }
 
+TEST_F(ServerTest, ReadHeadersRegexComplexity) {
+  // A certain header line causes an exception if the header property is parsed
+  // naively with a single regex. This occurs with libc++ but not libstdc++.
+  InMemoryStream stream{
+      "GET /hi HTTP/1.1\r\n"
+      " :                                                                      "
+      "       "};
+  bool connection_close = false;
+  svr_.process_request(stream, /*last_connection=*/false, connection_close,
+      /*prepare_request=*/nullptr);
+}
+
 TEST(ServerRequestParsingTest, TrimWhitespaceFromHeaderValues) {
   Server svr;
   std::string header_value;
